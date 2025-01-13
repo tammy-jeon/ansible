@@ -1,0 +1,12 @@
+192.168.110.201:5000/metallb/speaker:v0.14.9
+192.168.110.201:5000/metallb/controller:v0.14.9
+192.168.110.201:5000/argoproj/argocd
+192.168.110.201:5000/gitea/gitea
+192.168.110.201:5000/rook/ceph
+192.168.110.201:5000/cephcsi/cephcsi
+192.168.110.201:5000/sig-storage/csi-node-driver-registrar
+192.168.110.201:5000/sig-storage/csi-provisioner
+192.168.110.201:5000/sig-storage/csi-snapshotter
+192.168.110.201:5000/sig-storage/csi-attacher
+192.168.110.201:5000/sig-storage/csi-resizer
+192.168.110.201:500/csiaddons/k8s-sidecar

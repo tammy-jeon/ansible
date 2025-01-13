@@ -1,0 +1,95 @@
+global:
+  imageRegistry: "192.168.110.201:5000"
+prometheus:
+  service:
+    portName: http-web
+    type: NodePort
+  prometheusSpec:
+    enableFeatures:
+    - remote-write-receiver
+    enableRemoteWriteReceiver: true
+    serviceMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
+    storageSpec:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: rook-ceph-block-ssd
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+    additionalScrapeConfigs:
+    - job_name: loki
+      static_configs:
+      - targets:
+        - grafana-loki-loki-distributed-query-frontend.observability:3100
+    
+
+alertmanager:
+  alertmanagerSpec:
+    storage:
+      volumeClaimTemplate:
+        spec:
+          storageClassName: rook-ceph-block-ssd
+          accessModes: ["ReadWriteOnce"]
+          resources:
+            requests:
+              storage: 10Gi
+
+grafana:
+  service:
+    portName: http-web
+    type: NodePort
+  sidecar:
+    datasources:
+      defaultDatasourceEnabled: true
+  additionalDataSources:
+  - name: Loki
+    type: loki
+    url: http://grafana-loki-loki-distributed-query-frontend.observability:3100
+  - name: Tempo
+    type: tempo
+    uid:
+    url: http://grafana-tempo-query-frontend-discovery.observability.svc.cluster.local:3100
+    access: proxy
+    basicAuth: false
+    jsonData:
+      serviceMap:
+        datasourceUid: 'prometheus'
+      nodeGraph:
+        enabled: true
+  persistence:
+    enabled: true # true로 설정
+    type: pvc
+    storageClassName: rook-ceph-block-ssd # 스토리지 클래스
+    accessModes:
+    - ReadWriteOnce
+    size: 20Gi # 용량 설정
+    finalizers:
+    - kubernetes.io/pvc-protection
+  grafana.ini:
+    server:
+      root_url: https://monitor.onepredict.net
+    security:
+      allow_embedding: true
+    auth.anonymous:
+      enabled: true
+      org_role: Viewer
+      org_name: Onepredict
+
+  enabled: true
+  defaultDashboardsTimezone: kst
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    annotations:
+      kubernetes.io/ingress.class: nginx
+    labels: {}
+    hosts:
+    - turbo-monitor.onepredict.net
+    path: /
+    tls:
+    - secretName: onepredict-net-tls
+      hosts:
+      - turbo-monitor.onepredict.net
